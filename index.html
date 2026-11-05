@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#17152b" />
+  <meta name="description" content="A playful joke generator powered by the Official Joke API." />
+  <title>JokeLab — A little laugh, on demand</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #211d35;
+      --muted: #77738a;
+      --paper: #fbf9ff;
+      --panel: #ffffff;
+      --purple: #7257e8;
+      --purple-dark: #5940c8;
+      --lime: #d9f36a;
+      --line: #ece8f5;
+      --shadow: 0 22px 70px rgba(42, 29, 91, .12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% 8%, rgba(217,243,106,.35), transparent 26rem),
+        radial-gradient(circle at 90% 28%, rgba(114,87,232,.13), transparent 28rem),
+        var(--paper);
+      display: flex;
+      flex-direction: column;
+    }
+    button { font: inherit; }
+    .topbar {
+      width: min(1120px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 25px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand { display: flex; align-items: center; gap: 11px; font-weight: 850; letter-spacing: -.04em; font-size: 1.2rem; }
+    .brand-mark {
+      width: 38px; height: 38px; border-radius: 13px; display: grid; place-items: center;
+      color: #211d35; background: var(--lime); font-size: 1.25rem; transform: rotate(-7deg);
+    }
+    .top-note { color: var(--muted); font-size: .88rem; }
+    main {
+      flex: 1;
+      width: min(920px, calc(100% - 40px));
+      margin: 34px auto 76px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px; padding: 8px 13px;
+      border: 1px solid #e8e1ff; border-radius: 999px; color: var(--purple-dark);
+      background: rgba(255,255,255,.75); font-size: .78rem; font-weight: 800;
+      letter-spacing: .08em; text-transform: uppercase;
+    }
+    h1 {
+      margin: 23px 0 12px; max-width: 760px; font-size: clamp(2.7rem, 7vw, 5.3rem);
+      line-height: .99; letter-spacing: -.075em; font-weight: 900;
+    }
+    h1 span { color: var(--purple); }
+    .intro { max-width: 540px; margin: 0; color: var(--muted); line-height: 1.65; font-size: 1.05rem; }
+    .joke-card {
+      width: min(690px, 100%); margin-top: 43px; padding: clamp(25px, 5vw, 48px);
+      border: 1px solid rgba(236,232,245,.9); border-radius: 28px; background: var(--panel);
+      box-shadow: var(--shadow); position: relative; overflow: hidden;
+    }
+    .joke-card::before {
+      content: "“"; position: absolute; top: 2px; left: 22px; color: #f0edfb;
+      font-family: Georgia, serif; font-size: 8rem; line-height: 1; pointer-events: none;
+    }
+    .card-label { position: relative; color: var(--muted); font-size: .76rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    .joke-setup {
+      position: relative; min-height: 74px; display: grid; place-items: center;
+      margin: 24px auto 0; font-size: clamp(1.35rem, 3.7vw, 2rem);
+      line-height: 1.35; font-weight: 780; letter-spacing: -.035em;
+    }
+    .joke-punchline {
+      min-height: 42px; margin: 15px 0 0; color: var(--purple-dark);
+      font-size: clamp(1.1rem, 3vw, 1.45rem); font-weight: 750; line-height: 1.45;
+    }
+    .punchline-hidden { color: #aaa5ba; font-weight: 550; font-size: 1rem; }
+    .actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 30px; }
+    .btn {
+      min-height: 49px; padding: 0 21px; border: 0; border-radius: 14px; cursor: pointer;
+      font-weight: 800; transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+    .btn:hover { transform: translateY(-2px); }
+    .btn:focus-visible { outline: 3px solid #b9aaff; outline-offset: 3px; }
+    .btn-primary { color: white; background: var(--purple); box-shadow: 0 9px 22px rgba(114,87,232,.25); }
+    .btn-primary:hover { background: var(--purple-dark); }
+    .btn-secondary { color: var(--ink); background: #f2effa; }
+    .btn-secondary:hover { background: #eae5f7; }
+    .btn:disabled { opacity: .6; cursor: wait; transform: none; }
+    .status { min-height: 22px; margin: 16px 0 0; color: var(--muted); font-size: .88rem; }
+    .status.error { color: #b4233c; }
+    .tip { margin-top: 27px; color: var(--muted); font-size: .83rem; }
+    .tip kbd { padding: 3px 7px; border: 1px solid var(--line); border-radius: 6px; background: white; color: var(--ink); }
+    footer {
+      padding: 25px 20px 30px; border-top: 1px solid var(--line);
+      text-align: center; color: var(--muted); font-size: .78rem; line-height: 1.7;
+    }
+    footer a { color: var(--purple-dark); text-underline-offset: 3px; }
+    footer strong { color: var(--ink); }
+    @media (max-width: 560px) {
+      .topbar { width: calc(100% - 32px); padding: 18px 0; }
+      .top-note { font-size: .75rem; text-align: right; }
+      main { width: calc(100% - 32px); margin: 42px auto 55px; }
+      .intro { font-size: .96rem; }
+      .joke-card { margin-top: 32px; border-radius: 22px; }
+      .actions { flex-direction: column; }
+      .btn { width: 100%; }
+      .tip { line-height: 1.8; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">☺</span><span>JokeLab</span></div>
+    <div class="top-note">Your daily dose of questionable comedy</div>
+  </header>
+
+  <main>
+    <div class="eyebrow"><span aria-hidden="true">✦</span> The laugh generator</div>
+    <h1>Need a laugh?<br /><span>We got jokes.</span></h1>
+    <p class="intro">Take a break, press the button, and let a fresh two-part joke find its way into your day.</p>
+
+    <section class="joke-card" aria-live="polite" aria-atomic="true">
+      <div class="card-label">Today's very serious comedy</div>
+      <div class="joke-setup" id="setup">Getting the jokes ready…</div>
+      <p class="joke-punchline punchline-hidden" id="punchline">The punchline is waiting backstage.</p>
+      <div class="actions">
+        <button class="btn btn-primary" id="newJokeBtn" type="button">Tell me a joke <span aria-hidden="true">→</span></button>
+        <button class="btn btn-secondary" id="revealBtn" type="button" disabled>Reveal punchline</button>
+        <button class="btn btn-secondary" id="copyBtn" type="button" disabled>Copy joke</button>
+      </div>
+      <p class="status" id="status" role="status">Loading your first joke…</p>
+    </section>
+    <p class="tip">Pro tip: hit <kbd>Space</kbd> for another joke (when a button isn't focused).</p>
+  </main>
+
+  <footer>
+    <strong>JokeLab</strong> is an independent demo and is not affiliated with the API maintainers.<br />
+    Joke content is fetched from the
+    <a href="https://github.com/15Dkatz/official_joke_api" target="_blank" rel="noopener noreferrer">Official Joke API</a>
+    by 15Dkatz. API attribution is provided here; joke text is displayed as returned by the API.<br />
+    This project does not claim ownership of third-party joke content. Please review the API repository's
+    terms, license, and content guidance before redistributing or using it commercially.
+  </footer>
+
+  <script>
+    (() => {
+      "use strict";
+
+      // Public endpoint documented by the Official Joke API project.
+      const JOKE_ENDPOINT = "https://official-joke-api.appspot.com/random_joke";
+
+      const setupEl = document.getElementById("setup");
+      const punchlineEl = document.getElementById("punchline");
+      const statusEl = document.getElementById("status");
+      const newJokeBtn = document.getElementById("newJokeBtn");
+      const revealBtn = document.getElementById("revealBtn");
+      const copyBtn = document.getElementById("copyBtn");
+
+      let currentJoke = null;
+      let punchlineRevealed = false;
+
+      function setStatus(message, isError = false) {
+        statusEl.textContent = message;
+        statusEl.classList.toggle("error", isError);
+      }
+
+      function showJoke(joke) {
+        if (!joke || typeof joke.setup !== "string" || typeof joke.punchline !== "string") {
+          throw new Error("The API returned a joke in an unexpected format.");
+        }
+        currentJoke = joke;
+        punchlineRevealed = false;
+        setupEl.textContent = joke.setup;
+        punchlineEl.textContent = "The punchline is waiting backstage.";
+        punchlineEl.classList.add("punchline-hidden");
+        revealBtn.disabled = false;
+        revealBtn.textContent = "Reveal punchline";
+        copyBtn.disabled = false;
+        setStatus("Joke loaded. Ready when you are.");
+      }
+
+      async function getJoke() {
+        newJokeBtn.disabled = true;
+        newJokeBtn.textContent = "Finding a joke…";
+        revealBtn.disabled = true;
+        copyBtn.disabled = true;
+        setStatus("Searching the comedy archives…");
+        try {
+          const response = await fetch(JOKE_ENDPOINT, {
+            method: "GET",
+            headers: { "Accept": "application/json" },
+            cache: "no-store"
+          });
+          if (!response.ok) throw new Error(`The joke service returned HTTP ${response.status}.`);
+          const joke = await response.json();
+          showJoke(joke);
+        } catch (error) {
+          setupEl.textContent = "Oops. The joke took a wrong turn.";
+          punchlineEl.textContent = "Check your connection and try again.";
+          punchlineEl.classList.add("punchline-hidden");
+          setStatus(error.message || "Unable to load a joke right now.", true);
+        } finally {
+          newJokeBtn.disabled = false;
+          newJokeBtn.innerHTML = 'Tell me a joke <span aria-hidden="true">→</span>';
+        }
+      }
+
+      function revealPunchline() {
+        if (!currentJoke) return;
+        punchlineRevealed = !punchlineRevealed;
+        punchlineEl.textContent = punchlineRevealed
+          ? currentJoke.punchline
+          : "The punchline is waiting backstage.";
+        punchlineEl.classList.toggle("punchline-hidden", !punchlineRevealed);
+        revealBtn.textContent = punchlineRevealed ? "Hide punchline" : "Reveal punchline";
+      }
+
+      async function copyJoke() {
+        if (!currentJoke) return;
+        const text = `${currentJoke.setup}\n${currentJoke.punchline}`;
+        try {
+          await navigator.clipboard.writeText(text);
+          setStatus("Joke copied to your clipboard!");
+        } catch {
+          setStatus("Clipboard access was blocked by your browser.", true);
+        }
+      }
+
+      newJokeBtn.addEventListener("click", getJoke);
+      revealBtn.addEventListener("click", revealPunchline);
+      copyBtn.addEventListener("click", copyJoke);
+      document.addEventListener("keydown", (event) => {
+        const target = event.target;
+        const isTyping = target && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
+        if (event.code === "Space" && !isTyping && !event.repeat &&
+            ![newJokeBtn, revealBtn, copyBtn].includes(target)) {
+          event.preventDefault();
+          getJoke();
+        }
+      });
+
+      getJoke();
+    })();
+  </script>
+</body>
+</html>
